@@ -305,8 +305,11 @@ public class FinalRequestProcessor implements RequestProcessor {
                 if (path.indexOf('\0') != -1) {
                     throw new KeeperException.BadArgumentsException();
                 }
+                // 将watcher添加到WatchMananger
                 Stat stat = zks.getZKDatabase().statNode(path, existsRequest
                         .getWatch() ? cnxn : null);
+                //实际上到这里，已经在服务端完成了对path和watcher注册。
+                // 那么watche是怎么触发的呢。当然是由客户端在节点上进行操作。可以在WatchManager上找到触发事件
                 rsp = new ExistsResponse(stat);
                 break;
             }
@@ -456,6 +459,7 @@ public class FinalRequestProcessor implements RequestProcessor {
                     request.createTime, Time.currentElapsedTime());
 
         try {
+            // 发送响应给客户端
             cnxn.sendResponse(hdr, rsp, "response");
             if (request.type == OpCode.closeSession) {
                 cnxn.sendCloseSession();

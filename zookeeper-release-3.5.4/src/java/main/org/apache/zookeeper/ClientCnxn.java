@@ -292,13 +292,16 @@ public class ClientCnxn {
                 BinaryOutputArchive boa = BinaryOutputArchive.getArchive(baos);
                 boa.writeInt(-1, "len"); // We'll fill this in later
                 if (requestHeader != null) {
+                    // 将头部序列化
                     requestHeader.serialize(boa, "header");
                 }
                 if (request instanceof ConnectRequest) {
+                    // 将connect序列化
                     request.serialize(boa, "connect");
                     // append "am-I-allowed-to-be-readonly" flag
                     boa.writeBool(readOnly, "readOnly");
                 } else if (request != null) {
+                    // 将request序列化
                     request.serialize(boa, "request");
                 }
                 baos.close();
@@ -480,6 +483,7 @@ public class ClientCnxn {
                 else processEvent(packet);
              }
           } else {
+              // 将数据包添加到等待事件队列中
              waitingEvents.add(packet);
           }
        }
@@ -707,6 +711,7 @@ public class ClientCnxn {
             }
         } else {
             p.finished = true;
+            // 将packet添加到 事件通知队列中
             eventThread.queuePacket(p);
         }
     }
@@ -798,6 +803,7 @@ public class ClientCnxn {
         private boolean isFirstConnect = true;
 
         void readResponse(ByteBuffer incomingBuffer) throws IOException {
+            // 从incomingBuffer拿取数据
             ByteBufferInputStream bbis = new ByteBufferInputStream(
                     incomingBuffer);
             BinaryInputArchive bbia = BinaryInputArchive.getArchive(bbis);
@@ -856,7 +862,7 @@ public class ClientCnxn {
                     LOG.debug("Got " + we + " for sessionid 0x"
                             + Long.toHexString(sessionId));
                 }
-
+                // 将事件类型放入到eventThread线程中。waitingEvents等待消费的事件队列
                 eventThread.queueEvent( we );
                 return;
             }
@@ -1170,7 +1176,7 @@ public class ClientCnxn {
                     } else {
                         to = connectTimeout - clientCnxnSocket.getIdleRecv();
                     }
-                    
+                    // 超时
                     if (to <= 0) {
                         String warnInfo;
                         warnInfo = "Client session timed out, have not heard from server in "
@@ -1210,7 +1216,8 @@ public class ClientCnxn {
                         }
                         to = Math.min(to, pingRwTimeout - idlePingRwServer);
                     }
-
+                    // 传输队列中的数据，发送并等待响应
+                    // 实际上这个pendingQueue传的是空集合，在里面进行了添加操作
                     clientCnxnSocket.doTransport(to, pendingQueue, ClientCnxn.this);
                 } catch (Throwable e) {
                     if (closing) {
@@ -1561,6 +1568,7 @@ public class ClientCnxn {
                 outgoingQueue.add(packet);
             }
         }
+        // 这里是packetAdded 实际上调用的是NIO selector的wakeup 唤醒操作，类似异步通知，告诉sendThread数据准备好了
         sendThread.getClientCnxnSocket().packetAdded();
         return packet;
     }

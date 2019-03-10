@@ -360,6 +360,7 @@ public class ClientCnxnSocketNIO extends ClientCnxnSocket {
                     sendThread.primeConnection();
                 }
             } else if ((k.readyOps() & (SelectionKey.OP_READ | SelectionKey.OP_WRITE)) != 0) {
+                // 在这个代码里面 往等待队列中添加了数据
                 doIO(pendingQueue, cnxn);
             }
         }

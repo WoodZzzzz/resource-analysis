@@ -653,6 +653,7 @@ public class DataTree {
         Stat stat = new Stat();
         DataNode n = nodes.get(path);
         if (watcher != null) {
+            // 将path 和 ServerCnxn(Watcher) 添加到WatchMananger
             dataWatches.addWatch(path, watcher);
         }
         if (n == null) {

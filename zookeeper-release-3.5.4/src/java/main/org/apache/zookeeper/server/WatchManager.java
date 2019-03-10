@@ -69,6 +69,7 @@ class WatchManager {
         if (paths == null) {
             // cnxns typically have many watches, so use default cap here
             paths = new HashSet<String>();
+            // 将watcher作为key，原因是 一个路径一般会有多个watcher
             watch2Paths.put(watcher, paths);
         }
         paths.add(path);
@@ -99,6 +100,7 @@ class WatchManager {
                 KeeperState.SyncConnected, path);
         HashSet<Watcher> watchers;
         synchronized (this) {
+            // 先移除，所以事件只会触发一次
             watchers = watchTable.remove(path);
             if (watchers == null || watchers.isEmpty()) {
                 if (LOG.isTraceEnabled()) {
@@ -119,6 +121,8 @@ class WatchManager {
             if (supress != null && supress.contains(w)) {
                 continue;
             }
+            // 这里的watcher是ServerCnxn，也就是NettyServerCnxn
+            // 所以这里调用的是NettyServerCnxn的process
             w.process(e);
         }
         return watchers;

@@ -557,6 +557,7 @@ public class ZooKeeper implements AutoCloseable {
          */
         public void register(int rc) {
             if (shouldAddWatch(rc)) {
+                // 这个地方注意下：获得ZooKeeper.ZKWatchManager.dataWatches
                 Map<String, Set<Watcher>> watches = getWatches(rc);
                 synchronized(watches) {
                     Set<Watcher> watchers = watches.get(clientPath);
@@ -564,6 +565,7 @@ public class ZooKeeper implements AutoCloseable {
                         watchers = new HashSet<Watcher>();
                         watches.put(clientPath, watchers);
                     }
+                    // 将WatchRegistration的watcher转交给ZKWatchManager.dataWatches
                     watchers.add(watcher);
                 }
             }
@@ -880,6 +882,7 @@ public class ZooKeeper implements AutoCloseable {
 
         cnxn = new ClientCnxn(connectStringParser.getChrootPath(),
                 hostProvider, sessionTimeout, this, watchManager,
+                // 得到客户端与服务端通信的NIO Socket
                 getClientCnxnSocket(), canBeReadOnly);
         cnxn.start();
     }
@@ -2027,6 +2030,7 @@ public class ZooKeeper implements AutoCloseable {
         // the watch contains the un-chroot path
         WatchRegistration wcb = null;
         if (watcher != null) {
+            // 传入一个watcher实例，由WatchRegistration封装，携带节点路径和watcher
             wcb = new DataWatchRegistration(watcher, clientPath);
         }
 
@@ -2038,6 +2042,7 @@ public class ZooKeeper implements AutoCloseable {
         request.setPath(serverPath);
         request.setWatch(watcher != null);
         GetDataResponse response = new GetDataResponse();
+         // 发送请求
         ReplyHeader r = cnxn.submitRequest(h, request, response, wcb);
         if (r.getErr() != 0) {
             throw KeeperException.create(KeeperException.Code.get(r.getErr()),

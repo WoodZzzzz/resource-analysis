@@ -230,6 +230,8 @@ public class ClientCnxnSocketNetty extends ClientCnxnSocket {
                     return;
                 }
             } else {
+                // 判断outgoingQueue是否存在待发数据，不存在则直接返回
+                // outgoingQueue在客户端打包数据环节里面就已经添加了
                 if ((head = outgoingQueue.poll(waitTimeOut, TimeUnit.MILLISECONDS)) == null) {
                     return;
                 }
@@ -248,6 +250,7 @@ public class ClientCnxnSocketNetty extends ClientCnxnSocket {
                         + " is lost");
             }
             if (head != null) {
+                // 将head数据通过cnxn发送，pendingQueue表示已经发送等待响应的队列
                 doWrite(pendingQueue, head, cnxn);
             }
         } finally {
@@ -264,7 +267,7 @@ public class ClientCnxnSocketNetty extends ClientCnxnSocket {
     private void sendPkt(Packet p) {
         // Assuming the packet will be sent out successfully. Because if it fails,
         // the channel will close and clean up queues.
-        p.createBB();
+        p.createBB();  // 序列化请求数据
         updateLastSend();
         sentCount++;
         channel.write(ChannelBuffers.wrappedBuffer(p.bb));
@@ -290,6 +293,7 @@ public class ClientCnxnSocketNetty extends ClientCnxnSocket {
                         pendingQueue.add(p);
                     }
                 }
+                // 发送数据包
                 sendPkt(p);
             }
             if (outgoingQueue.isEmpty()) {

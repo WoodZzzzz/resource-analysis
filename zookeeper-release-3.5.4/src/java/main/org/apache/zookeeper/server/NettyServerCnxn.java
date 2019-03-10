@@ -151,6 +151,7 @@ public class NettyServerCnxn extends ServerCnxn {
         WatcherEvent e = event.getWrapper();
 
         try {
+            // xid=-1 zxid=-1， 所以在sendThread的readResponse方法里会进入replyHdr.getXid==-1里面烦烦烦
             sendResponse(h, e, "notification");
         } catch (IOException e1) {
             if (LOG.isDebugEnabled()) {
